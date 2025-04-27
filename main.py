@@ -10,8 +10,10 @@ def execute(email, password, eventLink):
 	rsvper = Autorsvp(email,password)
 	rsvper.login_with_email()
 
+	start = time.time()
 	rsvper.rsvp_meeting(eventLink)
-
+	print(f"Took {time.time() - start:.2f} seconds to complete RSVP")
+	
 	rsvper.closeBrowser()
 	return
 
@@ -48,7 +50,11 @@ if __name__ == "__main__":
 
 	scheduler = sched.scheduler(time.time, time.sleep) 
 	for eventAndTime in events:
-		dt = datetime.strptime(eventAndTime[1], "%H:%M-%d-%m-%Y")
+		try:
+			dt = datetime.strptime(eventAndTime[1], "%H:%M-%d-%m-%Y")
+		except:
+			print("time input in the wrong format. Defaulting to current time")
+			dt = datetime.now()
 
 		# Convert to epoch (Unix timestamp)
 		epoch_time = int(dt.timestamp())
@@ -57,6 +63,7 @@ if __name__ == "__main__":
 		scheduler.enterabs(epoch_time, 1, execute, argument= (email, password, eventAndTime[0]))
 	
 	scheduler.run() 
+
 	# waitTime = 60  #60 Minutes
 
 
