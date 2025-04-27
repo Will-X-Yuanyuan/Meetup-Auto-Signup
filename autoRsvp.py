@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from time import sleep
+from datetime import datetime
 
 ATTEND_BUTTON_XPATH = "//*[@data-testid='attend-irl-btn']"
 WAITLIST_BUTTON_XPATH = "//*[@data-testid='waitlist-btn']"
@@ -50,25 +51,25 @@ class Autorsvp():
         #Verify login
         WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.XPATH,WELCOME_XPATH)))
 
-        print("logged in")
+        print(f"[{datetime.now()}] Login successful.")
 
 
     def rsvp_meeting(self,link):
         start = time.time()
         self.browser.get(link)
 
-        print(f"Took {time.time() - start:.2f} seconds to get event")
+        print(f"[{datetime.now()}] Took {time.time() - start:.2f} seconds to get event")
 
         attend_button = self.find_element_by_xpath(ATTEND_BUTTON_XPATH)
         if attend_button:
-            print("attending event")
+            print(f"[{datetime.now()}] Attending event")
             attend_button.click()
             self.click_elem_by_xpath(PAY_ORGANISER_XPATH)
             return
         
         waitList_button = self.find_element_by_xpath(WAITLIST_BUTTON_XPATH)
         if waitList_button:
-            print("joining waitlist")
+            print(f"[{datetime.now()}] Joining waitlist")
             waitList_button.click()
             self.click_elem_by_xpath(JOIN_WAITLIST_WITH_LOW_PRIO_XPATH)
             self.click_elem_by_xpath(PAY_ORGANISER_XPATH)
