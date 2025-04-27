@@ -1,14 +1,20 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import time
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from time import sleep
+from datetime import datetime
 
 ATTEND_BUTTON_XPATH = "//*[@data-testid='attend-irl-btn']"
 WAITLIST_BUTTON_XPATH = "//*[@data-testid='waitlist-btn']"
+WELCOME_XPATH = "//*[@data-testid='feat-home-heading']"
 PAY_ORGANISER_XPATH = "/html/body/div[1]/div[3]/div/div[1]/div/div/div/div/div[2]/div[3]/button"
 JOIN_WAITLIST_WITH_LOW_PRIO_XPATH = "/html/body/div[1]/div[3]/div/div[1]/div/div/div/div[1]/div/button"
 MEETUP_URL = "https://www.meetup.com"
@@ -16,83 +22,64 @@ MEETUP_URL = "https://www.meetup.com"
 
 class Autorsvp():
     def __init__(self,email,password):
-    
-        self.browser = webdriver.Chrome()
+        
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless=new")
+        prefNoImage = {"profile.managed_default_content_settings.images": 2}
+        options.add_experimental_option("prefs", prefNoImage)
+        options.page_load_strategy = 'eager'
+
+        self.browser = webdriver.Chrome(options=options)
         self.browser.get(MEETUP_URL)
 
         self.email = email
         self.password = password
     
     def login_with_email(self):
-        
-        sleep(2)
-
-        login_button = self.browser.find_element(By.XPATH,'//*[@id="login-link"]')
+        login_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="login-link"]')))
         login_button.click()
-        
-        sleep(1)
 
-        email_box = self.browser.find_element(By.ID,"email")
+        email_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID,"email")))
         email_box.send_keys(self.email)
 
-        sleep(1)
-
-        password_box = self.browser.find_element(By.ID,"current-password")
+        password_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID,"current-password")))
         password_box.send_keys(self.password)
-        
-        sleep(1)
 
-        login_button = self.browser.find_element(By.NAME,"submitButton")
-        login_button.click()
+        submit_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.NAME,"submitButton")))
+        submit_button.click()
 
-        print("logging in...")
+        #Verify login
+        WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.XPATH,WELCOME_XPATH)))
 
-        sleep(1)
-
+        print(f"[{datetime.now()}] Login successful.")
 
 
     def rsvp_meeting(self,link):
+        start = time.time()
         self.browser.get(link)
-        
-        #If Already RSVP'ed
 
-        # if self.__check_already_going():
-        # 	return
-
-        #Click RSVP Button
-
-        if self.browser:
-            print("got browser")
-        sleep(5)
+        print(f"[{datetime.now()}] Took {time.time() - start:.2f} seconds to get event")
 
         attend_button = self.find_element_by_xpath(ATTEND_BUTTON_XPATH)
         if attend_button:
-            print("attending event")
+            print(f"[{datetime.now()}] Attending event")
             attend_button.click()
-            sleep(5)
-
             self.click_elem_by_xpath(PAY_ORGANISER_XPATH)
             return
         
         waitList_button = self.find_element_by_xpath(WAITLIST_BUTTON_XPATH)
         if waitList_button:
-            print("joining waitlist")
+            print(f"[{datetime.now()}] Joining waitlist")
             waitList_button.click()
-            sleep(5)
-
             self.click_elem_by_xpath(JOIN_WAITLIST_WITH_LOW_PRIO_XPATH)
-            sleep(5)
-
             self.click_elem_by_xpath(PAY_ORGANISER_XPATH)
             return
-        
-        sleep(2)
 
     def find_element_by_xpath(self, xpath):
         print("finding elem for xpath: ", xpath)
 
         try:
-            elem = self.browser.find_element(By.XPATH, xpath)
+            elem = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             return elem
         except:
             print("no elem found for xpath: ", xpath)
@@ -103,8 +90,9 @@ class Autorsvp():
         button = self.find_element_by_xpath(xpath)
         if button:
             print("button found")
-
-        button.click()
+            button.click()
+        else:
+            print("Error: element for xpath not found: ", xpath)
 
     #Check if Already RSVPed
     def __check_already_going(self):
