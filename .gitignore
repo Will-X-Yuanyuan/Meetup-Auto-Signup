@@ -2,3 +2,4 @@ constants.txt
 .plotting_test/
 test-workspace.code-workspace
 __pycache__/
+config.yaml
