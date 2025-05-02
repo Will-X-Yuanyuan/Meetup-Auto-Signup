@@ -2,8 +2,10 @@
 
 This program will automatically RSVP to Meetup.com events at a scheduled time.
 
-Note that the program will STOP running if your PC goes to sleep! **Make sure your PC is open when the program is running!
-**
+Note that the program will STOP running if your PC goes to sleep! So make sure your PC is open when the program is running!
+
+Also, if you have the program running at home, it is best to avoid signing in to Meetup right before the scheduled RSVP time at other places (The system may flag it as suspicious login if you login at completely different places at around the same time)
+
 
 ## 📜 Requirements
 1. Have python installed

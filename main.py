@@ -9,7 +9,7 @@ import os
 import shutil
 
 BUFFER_SECONDS = 2
-EARLY_LOGIN_SECONDS = 30
+EARLY_LOGIN_SECONDS = 40
 
 def execute(email, password, rsvp_time, event_link):
     print(f"[{datetime.now()}] Starting login process...")

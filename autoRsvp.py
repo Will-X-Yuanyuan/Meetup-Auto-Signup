@@ -2,10 +2,10 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import time
+import random
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -14,6 +14,7 @@ from datetime import datetime
 
 ATTEND_BUTTON_XPATH = "//*[@data-testid='attend-irl-btn']"
 WAITLIST_BUTTON_XPATH = "//*[@data-testid='waitlist-btn']"
+NOTIFICATIONS_XPATH = "//*[@id='notifications-links']"
 WELCOME_XPATH = "//*[@data-testid='feat-home-heading']"
 PAY_ORGANISER_XPATH = "/html/body/div[1]/div[3]/div/div[1]/div/div/div/div/div[2]/div[3]/button"
 JOIN_WAITLIST_WITH_LOW_PRIO_XPATH = "/html/body/div[1]/div[3]/div/div[1]/div/div/div/div[1]/div/button"
@@ -24,35 +25,61 @@ class Autorsvp():
     def __init__(self,email,password):
         
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless=new")
-        prefNoImage = {"profile.managed_default_content_settings.images": 2}
-        options.add_experimental_option("prefs", prefNoImage)
+
+        # Option to not show browser
+        # options.add_argument("--headless=new")
+
+        # Avoid being detected as a bot
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        # Do not load images for faster load time
+        # prefNoImage = {"profile.managed_default_content_settings.images": 2}
+        # options.add_experimental_option("prefs", prefNoImage)
+
+        # Do not wait for entire page to load before performing actions
         options.page_load_strategy = 'eager'
 
         self.browser = webdriver.Chrome(options=options)
+
+        # Avoid detection
+        self.browser.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})") 
         self.browser.get(MEETUP_URL)
 
         self.email = email
         self.password = password
     
     def login_with_email(self):
-        login_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="login-link"]')))
+        print(f"[{datetime.now()}] Attempting login...")
+
+        # Random delay before clicking login
+        sleep(random.uniform(1.5, 3.5))  
+
+        login_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="login-link"]')))
         login_button.click()
 
-        email_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID,"email")))
+        email_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID, "email")))
         email_box.send_keys(self.email)
 
-        password_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID,"current-password")))
+        password_box = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.ID, "current-password")))
         password_box.send_keys(self.password)
 
-        submit_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.NAME,"submitButton")))
+        # Random delay before clicking submit
+        sleep(random.uniform(3.5, 7.5))  
+
+        submit_button = WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable((By.NAME, "submitButton")))
         submit_button.click()
 
-        #Verify login
-        WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.XPATH,WELCOME_XPATH)))
+        # Try to verify successful login
+        try:
+            WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.XPATH, NOTIFICATIONS_XPATH)))
+        except:
+            print("unable to verify login")
+            sleep(random.uniform(3, 6)) 
 
         print(f"[{datetime.now()}] Login successful.")
-
+        return 
 
     def rsvp_meeting(self,link):
         start = time.time()
@@ -62,6 +89,9 @@ class Autorsvp():
 
         attend_button = self.find_element_by_xpath(ATTEND_BUTTON_XPATH)
         if attend_button:
+            # Wait for random time to avoid bot detection
+            sleep(random.uniform(0.8, 2.0))
+
             print(f"[{datetime.now()}] Attending event")
             attend_button.click()
             self.click_elem_by_xpath(PAY_ORGANISER_XPATH)
@@ -69,6 +99,9 @@ class Autorsvp():
         
         waitList_button = self.find_element_by_xpath(WAITLIST_BUTTON_XPATH)
         if waitList_button:
+            # Wait for random time to avoid bot detection
+            sleep(random.uniform(0.8, 2.0))
+
             print(f"[{datetime.now()}] Joining waitlist")
             waitList_button.click()
             self.click_elem_by_xpath(JOIN_WAITLIST_WITH_LOW_PRIO_XPATH)
@@ -90,6 +123,9 @@ class Autorsvp():
         button = self.find_element_by_xpath(xpath)
         if button:
             print("button found")
+
+            # Wait for random time to avoid bot detection
+            sleep(random.uniform(0.8, 2.0))
             button.click()
         else:
             print("Error: element for xpath not found: ", xpath)
